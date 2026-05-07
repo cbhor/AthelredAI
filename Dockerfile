@@ -1,6 +1,6 @@
 FROM node:22-slim
 
-# Install system dependencies for native modules (sqlite3)
+# Install system dependencies for native modules (better-sqlite3)
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -9,21 +9,25 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Install dependencies
+# Install all dependencies (needed for build)
 COPY package*.json ./
 RUN npm install
 
-# Copy source
+# Copy source code
 COPY . .
 
-# Build frontend
+# Build the frontend assets
 RUN npm run build
 
-# Ensure data directory exists for SQLite
+# Create data directory for SQLite persistence
 RUN mkdir -p data
+
+# Set permissions (optional but good practice)
+RUN chmod 777 data
 
 ENV NODE_ENV=production
 EXPOSE 3000
 
-# Start with tsx for the server
+# Use tsx to run the server in production
+# Node 22 supports type stripping, but tsx handles the module resolution more gracefully for this setup.
 CMD ["npm", "start"]
